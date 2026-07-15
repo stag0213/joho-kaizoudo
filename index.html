@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>画像解像度変換 | ブラウザ完結型</title>
   <style>
-    /* ============================
-       リセット & ベース
-       flex の暗黙伸縮を避けるため height / max-height / min-height を明示
-    ============================ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -55,50 +51,28 @@
     .pane-left  { background: #182238; }
     .pane-right { background: #1a2440; border-left: 1px solid var(--border); }
 
-    /* ============================
-       【修正箇所】
-       旧: <input hidden> + label{pointer-events:none} → クリックが届かない
-       新: input を absolute+opacity:0 で全面に敷設、label は表示専用
-    ============================ */
     .upload-zone {
       position: relative;
       flex: 0 0 20%; max-height: 20%; min-height: 20%;
       background: var(--bg-card);
       border: 2px dashed var(--accent);
       border-radius: 12px;
-      cursor: pointer;
-      overflow: hidden;
+      cursor: pointer; overflow: hidden;
       transition: background 0.15s;
     }
-    .upload-zone.drag-over {
-      background: rgba(56, 189, 248, 0.18);
-      border-style: solid;
-    }
-
-    /* 透明 file input をゾーン全体に敷いて必ずクリックを拾う */
+    .upload-zone.drag-over { background: rgba(56, 189, 248, 0.18); border-style: solid; }
     .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-      z-index: 2;
-      margin: 0; padding: 0; border: 0;
-      font-size: 0;
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; z-index: 2;
+      margin: 0; padding: 0; border: 0; font-size: 0;
     }
-
     .upload-label {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;     /* 表示専用 — クリックは透過して input が受ける */
+      position: absolute; inset: 0; pointer-events: none;
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 8px; z-index: 1;
     }
     .upload-icon  { font-size: 28px; margin-bottom: 4px; }
     .upload-text-main { font-size: 15px; font-weight: 600; }
@@ -118,7 +92,10 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; position: relative;
     }
-    .preview-box canvas { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .preview-box canvas {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain; display: block;
+    }
     .placeholder {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
@@ -126,10 +103,18 @@
     }
     .preview-box.has-image .placeholder { display: none; }
 
+    /* 比較ラベル */
+    .preview-label {
+      position: absolute; top: 8px; left: 8px;
+      font-size: 11px; font-weight: 700; color: #0f172a;
+      background: var(--accent); padding: 3px 8px;
+      border-radius: 4px; letter-spacing: 0.5px; z-index: 3; pointer-events: none;
+    }
+    .preview-label.right { background: var(--accent-hot); }
+
     .info-block {
       flex: 1 1 auto; min-height: 0;
-      background: var(--bg-card);
-      border-radius: 10px;
+      background: var(--bg-card); border-radius: 10px;
       padding: 12px 16px;
       display: flex; flex-direction: column; gap: 6px; overflow: hidden;
     }
@@ -143,8 +128,7 @@
 
     .slider-zone {
       flex: 0 0 20%; max-height: 20%; min-height: 20%;
-      background: var(--bg-card);
-      border-radius: 12px;
+      background: var(--bg-card); border-radius: 12px;
       padding: 10px 16px;
       display: flex; flex-direction: column; justify-content: center; gap: 6px;
     }
@@ -171,8 +155,8 @@
 
     .download-btn {
       flex: 0 0 auto; height: 44px; min-height: 44px; max-height: 44px;
-      background: var(--accent);
-      color: #0f172a; font-weight: 700; font-size: 14px;
+      background: var(--accent); color: #0f172a;
+      font-weight: 700; font-size: 14px;
       border: none; border-radius: 10px; cursor: pointer;
       transition: background 0.15s, transform 0.05s;
     }
@@ -182,8 +166,7 @@
     .app-footer {
       flex: 0 0 auto; height: 36px; max-height: 36px;
       padding: 0 24px;
-      background: var(--bg-pane);
-      border-top: 1px solid var(--border);
+      background: var(--bg-pane); border-top: 1px solid var(--border);
       display: flex; align-items: center; font-size: 11px; color: var(--text-sub);
     }
 
@@ -203,7 +186,6 @@
   <main class="split" id="splitRoot">
     <section class="pane pane-left" id="paneLeft">
       <div class="upload-zone" id="uploadZone">
-        <!-- 【修正】hidden を廃止し、opacity:0 で透明化 → クリックが届く -->
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
         <div class="upload-label">
           <div class="upload-icon">📁</div>
@@ -214,6 +196,7 @@
 
       <div class="preview-stage" id="previewStage">
         <div class="preview-box" id="originalBox">
+          <div class="preview-label">元画像</div>
           <canvas id="canvasOriginal"></canvas>
           <div class="placeholder" id="placeholderOriginal">
             <span>元画像がここに表示されます</span>
@@ -240,14 +223,18 @@
     <section class="pane pane-right" id="paneRight">
       <div class="output-zone">
         <div class="preview-box" id="resizedBox">
+          <div class="preview-label right">変換後</div>
+          <!-- 表示用 canvas: 元画像と同じ寸法で表示 -->
           <canvas id="canvasResized"></canvas>
+          <!-- エクスポート専用 canvas（非表示）: 実際の縮小サイズ -->
+          <canvas id="canvasExport" style="display:none;"></canvas>
           <div class="placeholder" id="placeholderResized">
             <span>変換後プレビュー</span>
           </div>
         </div>
         <div class="info-block">
           <div class="info-title">変換後情報</div>
-          <div class="info-row"><span>推定解像度</span><b id="newRes">—</b></div>
+          <div class="info-row"><span>出力解像度</span><b id="newRes">—</b></div>
           <div class="info-row"><span>推定ファイルサイズ</span><b id="newSize">—</b></div>
           <div class="info-row"><span>削減率</span><b id="reduction">—</b></div>
         </div>
@@ -265,11 +252,11 @@
   <script>
     'use strict';
 
-    // --- DOM 参照 ---
     const fileInput       = document.getElementById('fileInput');
     const uploadZone      = document.getElementById('uploadZone');
     const canvasOriginal  = document.getElementById('canvasOriginal');
     const canvasResized   = document.getElementById('canvasResized');
+    const canvasExport    = document.getElementById('canvasExport');
     const originalBox     = document.getElementById('originalBox');
     const resizedBox      = document.getElementById('resizedBox');
     const placeholderOrig = document.getElementById('placeholderOriginal');
@@ -285,12 +272,7 @@
     const reductionEl  = document.getElementById('reduction');
     const downloadBtn  = document.getElementById('downloadBtn');
 
-    const state = {
-      img: null,
-      meta: null,
-      scale: 100,
-      estimatedBlob: null
-    };
+    const state = { img: null, meta: null, scale: 100, estimatedBlob: null };
 
     function showError(msg) { alert(msg); }
 
@@ -321,18 +303,13 @@
       return Math.max(1, Math.round(origBytes * pixelRatio * factor));
     }
 
-    // ============================
-    // 画像読込 — クリックでもドラッグでも同じ関数を通る
-    // ============================
     function loadImageFromFile(file) {
       if (!file) return;
-
       const fmt = detectFormat(file.type, file.name);
       if (fmt === 'UNKNOWN') {
         showError('対応していない形式です。JPEG / PNG / WebP を選択してください。');
         return;
       }
-
       const reader = new FileReader();
       reader.onerror = () => showError('ファイルの読み込みに失敗しました。');
       reader.onload = (e) => {
@@ -341,11 +318,9 @@
         img.onload = () => {
           state.img = img;
           state.meta = {
-            name: file.name,
-            size: file.size,
+            name: file.name, size: file.size,
             type: file.type || ('image/' + fmt.toLowerCase()),
-            width: img.naturalWidth,
-            height: img.naturalHeight
+            width: img.naturalWidth, height: img.naturalHeight
           };
           origResEl.textContent    = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
           origSizeEl.textContent   = formatBytes(file.size);
@@ -365,6 +340,7 @@
       reader.readAsDataURL(file);
     }
 
+    // 左 Canvas（元画像をそのまま原寸表示）
     function drawOriginal() {
       const ctx = canvasOriginal.getContext('2d');
       const w = state.meta.width, h = state.meta.height;
@@ -375,14 +351,17 @@
       ctx.drawImage(state.img, 0, 0, w, h);
     }
 
+    // 右 Canvas は【元画像と同じ寸法】を維持。
+    // ・canvasExport に実縮小ピクセルで描画
+    // ・それを canvasResized（=元画像サイズ）にピクセル等倍でアップスケール描画
     function updateResized(scalePct) {
       if (!state.img) return;
       state.scale = scalePct;
       sliderValueEl.textContent = scalePct + '%';
 
       const origW = state.meta.width, origH = state.meta.height;
-      const newW = Math.max(1, Math.round(origW * scalePct / 100));
-      const newH = Math.max(1, Math.round(origH * scalePct / 100));
+      const newW  = Math.max(1, Math.round(origW * scalePct / 100));
+      const newH  = Math.max(1, Math.round(origH * scalePct / 100));
 
       newResEl.textContent = newW + ' × ' + newH + ' px';
       const estBytes = estimateBlobSize(state.meta.size, origW, origH, newW, newH, state.meta.type);
@@ -390,42 +369,47 @@
       const reduce = ((1 - (newW * newH) / (origW * origH)) * 100);
       reductionEl.textContent = reduce.toFixed(1) + ' %';
 
-      const ctx = canvasResized.getContext('2d');
-      canvasResized.width  = newW;
-      canvasResized.height = newH;
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = scalePct < 50 ? 'low' : 'high';
-      ctx.clearRect(0, 0, newW, newH);
-      ctx.drawImage(state.img, 0, 0, newW, newH);
+      // ① canvasExport — 実縮小サイズで描画（ダウンロード出力）
+      const ctxExport = canvasExport.getContext('2d');
+      canvasExport.width  = newW;
+      canvasExport.height = newH;
+      ctxExport.imageSmoothingEnabled = true;
+      ctxExport.imageSmoothingQuality = 'high';
+      ctxExport.clearRect(0, 0, newW, newH);
+      ctxExport.drawImage(state.img, 0, 0, newW, newH);
 
+      // ② canvasResized — 【元画像と同じ px サイズ】に固定
+      //   image-rendering: pixelated で縮小時のピクセル境界をくっきり可視化
+      const ctxResized = canvasResized.getContext('2d');
+      canvasResized.width  = origW;
+      canvasResized.height = origH;
+      ctxResized.clearRect(0, 0, origW, origH);
+      ctxResized.imageSmoothingEnabled = (scalePct === 100);
+      ctxResized.imageSmoothingQuality = 'high';
+      canvasResized.style.setProperty('image-rendering', (scalePct < 100) ? 'pixelated' : 'auto');
+      ctxResized.drawImage(canvasExport, 0, 0, newW, newH, 0, 0, origW, origH);
+
+      // ③ ダウンロード用 Blob — 実出力サイズで生成
       const mime = state.meta.type;
-      canvasResized.toBlob(
+      canvasExport.toBlob(
         (blob) => { state.estimatedBlob = blob; },
         mime,
         mime === 'image/png' ? undefined : 0.92
       );
     }
 
-    // ============================
-    // イベント配線（多重フォールバック付き）
-    // ============================
-
-    // (A) ファイル選択ダイアログ — 透明 file input 自体
+    // イベント
     fileInput.addEventListener('change', (e) => {
       const f = e.target.files && e.target.files[0];
       if (f) loadImageFromFile(f);
-      // 同じファイルを再選択できるようリセット
       e.target.value = '';
     });
 
-    // (B) ゾーン全体のクリック — input の click() を明示呼び出し
-    //     ブラウザ/OS 差異で input 自身が拾わない場合のフォールバック
     uploadZone.addEventListener('click', (e) => {
-      if (e.target === fileInput) return; // input 自身なら不要（二重起動防止）
+      if (e.target === fileInput) return;
       fileInput.click();
     });
 
-    // (C) ドラッグ＆ドロップ — ゾーン内
     ['dragenter', 'dragover'].forEach((ev) => {
       uploadZone.addEventListener(ev, (e) => {
         e.preventDefault(); e.stopPropagation();
@@ -445,14 +429,12 @@
       if (file) loadImageFromFile(file);
     });
 
-    // (D) ゾーン外へのドロップでブラウザがファイルを開く挙動を抑止
     ['dragover', 'drop'].forEach((ev) => {
       window.addEventListener(ev, (e) => {
         if (!uploadZone.contains(e.target)) e.preventDefault();
       });
     });
 
-    // (E) スライダー
     let rafQueued = false;
     slider.addEventListener('input', () => {
       if (rafQueued || !state.img) return;
@@ -463,7 +445,6 @@
       });
     });
 
-    // (F) ダウンロード
     downloadBtn.addEventListener('click', () => {
       if (!state.estimatedBlob || !state.meta) return;
       const url = URL.createObjectURL(state.estimatedBlob);
