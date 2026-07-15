@@ -1,8 +1,3 @@
-/* ============================
-   リセット & ベース
-   ※ flex/grid の暗黙伸縮を避けるため、
-      height / max-height / min-height を明示指定
-============================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -15,9 +10,7 @@
   --accent: #38bdf8;
   --accent-hot: #f97316;
   --placeholder-bg: #475569;
-  --preview-height: 400px;   /* 要件: 400px 固定 */
-  --upload-height: 20%;      /* 要件: 高さ20%固定 (分割内) */
-  --slider-height: 20%;      /* 要件: 高さ20%固定 (分割内) */
+  --preview-height: 400px;
 }
 
 html, body {
@@ -29,16 +22,8 @@ html, body {
                "Yu Gothic UI", Meiryo, sans-serif;
   overflow: hidden;
 }
+body { display: flex; flex-direction: column; min-height: 100vh; }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* ============================
-   ヘッダー
-============================ */
 .app-header {
   flex: 0 0 auto;
   height: 64px;
@@ -50,27 +35,16 @@ body {
   align-items: center;
   gap: 16px;
 }
-.app-header h1 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--accent);
-}
-.subtitle {
-  font-size: 12px;
-  color: var(--text-sub);
-}
+.app-header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+.subtitle { font-size: 12px; color: var(--text-sub); }
 
-/* ============================
-   左右2分割スプリット
-   要件: 50%/50%、ミリ単位同期
-============================ */
 .split {
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
   width: 100%;
   min-height: 0;
-  height: calc(100vh - 64px - 36px); /* header + footer 分を除く */
+  height: calc(100vh - 64px - 36px);
   max-height: calc(100vh - 64px - 36px);
 }
 
@@ -88,9 +62,6 @@ body {
 .pane-left  { background: #182238; }
 .pane-right { background: #1a2440; border-left: 1px solid var(--border); }
 
-/* ============================
-   アップロードゾーン (高さ20%)
-============================ */
 .upload-zone {
   flex: 0 0 20%;
   max-height: 20%;
@@ -109,27 +80,12 @@ body {
   background: rgba(56, 189, 248, 0.18);
   border-style: solid;
 }
-.upload-label {
-  text-align: center;
-  pointer-events: none;
-  padding: 8px;
-}
+.upload-label { text-align: center; pointer-events: none; padding: 8px; }
 .upload-icon  { font-size: 28px; margin-bottom: 4px; }
 .upload-text-main { font-size: 15px; font-weight: 600; }
 .upload-text-sub  { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
 
-/* ============================
-   プレビューステージ（中央）
-============================ */
-.preview-stage {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow: hidden;
-}
-.output-zone {
+.preview-stage, .output-zone {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -170,9 +126,6 @@ body {
 }
 .preview-box.has-image .placeholder { display: none; }
 
-/* ============================
-   情報ブロック
-============================ */
 .info-block {
   flex: 1 1 auto;
   min-height: 0;
@@ -202,9 +155,6 @@ body {
 .info-row span { color: var(--text-sub); }
 .info-row b    { color: var(--text); font-weight: 600; }
 
-/* ============================
-   スライダーゾーン (高さ20%)
-============================ */
 .slider-zone {
   flex: 0 0 20%;
   max-height: 20%;
@@ -217,16 +167,8 @@ body {
   justify-content: center;
   gap: 6px;
 }
-.slider-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.slider-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-}
+.slider-head { display: flex; justify-content: space-between; align-items: center; }
+.slider-label { font-size: 13px; font-weight: 600; color: var(--accent); }
 .slider-value {
   font-size: 20px;
   font-weight: 700;
@@ -265,9 +207,6 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid #fff;
 }
 
-/* ============================
-   ダウンロードボタン
-============================ */
 .download-btn {
   flex: 0 0 auto;
   height: 44px;
@@ -292,9 +231,6 @@ input[type="range"]::-moz-range-thumb {
   cursor: not-allowed;
 }
 
-/* ============================
-   フッター
-============================ */
 .app-footer {
   flex: 0 0 auto;
   height: 36px;
@@ -308,18 +244,8 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-sub);
 }
 
-/* レスポンシブ: モバイルでは縦並び */
 @media (max-width: 768px) {
-  .split {
-    flex-direction: column;
-    height: auto;
-    max-height: none;
-  }
-  .pane {
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
-    height: auto;
-  }
+  .split { flex-direction: column; height: auto; max-height: none; }
+  .pane { width: 100%; min-width: 100%; max-width: 100%; height: auto; }
   .preview-box { height: 280px; max-height: 280px; min-height: 280px; }
 }
