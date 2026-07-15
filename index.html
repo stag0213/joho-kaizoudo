@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>画像解像度変換 | ブラウザ完結型</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>画像解像度変換</h1>
+    <p class="subtitle">ブラウザ内で完結・データは一切外部送信されません</p>
+  </header>
+
+  <main class="split" id="splitRoot">
+    <!-- 左画面：入力 -->
+    <section class="pane pane-left" id="paneLeft">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden />
+        <label for="fileInput" class="upload-label">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text-main">画像をドラッグ＆ドロップ</div>
+          <div class="upload-text-sub">またはクリックして選択 (JPEG / PNG / WebP)</div>
+        </label>
+      </div>
+
+      <div class="preview-stage" id="previewStage">
+        <div class="preview-box" id="originalBox">
+          <canvas id="canvasOriginal"></canvas>
+          <div class="placeholder" id="placeholderOriginal">
+            <span>元画像がここに表示されます</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-title">元画像情報</div>
+          <div class="info-row"><span>解像度</span><b id="origRes">—</b></div>
+          <div class="info-row"><span>ファイルサイズ</span><b id="origSize">—</b></div>
+          <div class="info-row"><span>形式</span><b id="origFormat">—</b></div>
+        </div>
+      </div>
+
+      <div class="slider-zone" id="sliderZone">
+        <div class="slider-head">
+          <span class="slider-label">解像度スケール</span>
+          <span class="slider-value" id="sliderValue">100%</span>
+        </div>
+        <input type="range" id="scaleSlider" min="10" max="100" step="1" value="100" />
+        <div class="slider-scale"><span>10%</span><span>100%</span></div>
+      </div>
+    </section>
+
+    <!-- 右画面：出力 -->
+    <section class="pane pane-right" id="paneRight">
+      <div class="output-zone">
+        <div class="preview-box" id="resizedBox">
+          <canvas id="canvasResized"></canvas>
+          <div class="placeholder" id="placeholderResized">
+            <span>変換後プレビュー</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-title">変換後情報</div>
+          <div class="info-row"><span>推定解像度</span><b id="newRes">—</b></div>
+          <div class="info-row"><span>推定ファイルサイズ</span><b id="newSize">—</b></div>
+          <div class="info-row"><span>削減率</span><b id="reduction">—</b></div>
+        </div>
+        <button class="download-btn" id="downloadBtn" disabled>
+          ⬇ ダウンロード (_resized)
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>🔒 100%ローカル処理 — ネットワーク送信なし</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
