@@ -1,12 +1,5 @@
-/* =====================================================
-   ブラウザ完結型 画像解像度変換アプリ
-   - 完全クライアントサイド処理（外部送信ゼロ）
-   - HTML5 Canvas API + FileReader API
-   - requestAnimationFrame で 100ms 以内の再描画
-===================================================== */
 'use strict';
 
-// --- DOM 参照 ---
 const fileInput        = document.getElementById('fileInput');
 const uploadZone       = document.getElementById('uploadZone');
 const canvasOriginal   = document.getElementById('canvasOriginal');
@@ -26,17 +19,8 @@ const newSizeEl     = document.getElementById('newSize');
 const reductionEl   = document.getElementById('reduction');
 const downloadBtn   = document.getElementById('downloadBtn');
 
-// --- 状態 ---
-const state = {
-  img: null,          // Image オブジェクト
-  meta: null,         // { name, size, type, width, height }
-  scale: 100,         // %
-  estimatedBlob: null // 推定 Blob（ダウンロード用）
-};
+const state = { img: null, meta: null, scale: 100, estimatedBlob: null };
 
-// ============================
-// ユーティリティ
-// ============================
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return '—';
   if (bytes < 1024) return bytes.toFixed(0) + ' B';
@@ -55,25 +39,15 @@ function detectFormat(mime, filename) {
   return 'UNKNOWN';
 }
 
-// 画像タイプの Quality 係数（推定ファイルサイズ用ヒューリスティック）
-// JPEG/WebP は lossy, PNG はほぼ無圧縮のため符号化効率が大きく異なる
-const COMPRESSION_FACTOR = {
-  JPEG: 0.15,   // 高圧縮
-  WEBP: 0.12,   // さらに高圧縮
-  PNG:  0.85    // ほぼ生データに近い
-};
+const COMPRESSION_FACTOR = { JPEG: 0.15, WEBP: 0.12, PNG: 0.85 };
 
 function estimateBlobSize(origBytes, origW, origH, newW, newH, mime) {
-  // 画素数比 × 元バイト × 形式係数 による近似
   const pixelRatio = (newW * newH) / (origW * origH);
   const fmt = detectFormat(mime);
   const factor = COMPRESSION_FACTOR[fmt] ?? 0.3;
   return Math.round(origBytes * pixelRatio * factor);
 }
 
-// ============================
-// ファイル読み込み
-// ============================
 function handleFile(file) {
   if (!file) return;
   const fmt = detectFormat(file.type, file.name);
@@ -81,32 +55,27 @@ function handleFile(file) {
     alert('対応していない形式です。JPEG / PNG / WebP を選択してください。');
     return;
   }
-
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
       state.img = img;
       state.meta = {
-        name: file.name,
-        size: file.size,
+        name: file.name, size: file.size,
         type: file.type || ('image/' + fmt.toLowerCase()),
-        width: img.naturalWidth,
-        height: img.naturalHeight
+        width: img.naturalWidth, height: img.naturalHeight
       };
-      // メタ情報表示
       origResEl.textContent    = `${img.naturalWidth} × ${img.naturalHeight} px`;
       origSizeEl.textContent   = formatBytes(file.size);
       origFormatEl.textContent = fmt;
 
-      // プレースホルダ非表示
       placeholderOrig.style.display = 'none';
       placeholderRsz.style.display  = 'none';
       originalBox.classList.add('has-image');
       resizedBox.classList.add('has-image');
 
       drawOriginal();
-      updateResized(100);  // 初期描画
+      updateResized(100);
       downloadBtn.disabled = false;
     };
     img.onerror = () => alert('画像の読み込みに失敗しました。');
@@ -115,68 +84,48 @@ function handleFile(file) {
   reader.readAsDataURL(file);
 }
 
-// ============================
-// 描画：左側（元画像）
-// ============================
 function drawOriginal() {
   if (!state.img) return;
   const ctx = canvasOriginal.getContext('2d');
-  const w = state.meta.width;
-  const h = state.meta.height;
-  canvasOriginal.width  = w;
-  canvasOriginal.height = h;
+  const w = state.meta.width, h = state.meta.height;
+  canvasOriginal.width = w; canvasOriginal.height = h;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(state.img, 0, 0, w, h);
 }
 
-// ============================
-// 描画：右側（変換後）
-// ============================
 function updateResized(scalePct) {
   if (!state.img) return;
   state.scale = scalePct;
   sliderValueEl.textContent = scalePct + '%';
 
-  const origW = state.meta.width;
-  const origH = state.meta.height;
+  const origW = state.meta.width, origH = state.meta.height;
   const newW = Math.max(1, Math.round(origW * scalePct / 100));
   const newH = Math.max(1, Math.round(origH * scalePct / 100));
 
-  // メタ情報の動的更新
   newResEl.textContent = `${newW} × ${newH} px`;
-  const estBytes = estimateBlobSize(
-    state.meta.size, origW, origH, newW, newH, state.meta.type
-  );
+  const estBytes = estimateBlobSize(state.meta.size, origW, origH, newW, newH, state.meta.type);
   newSizeEl.textContent = formatBytes(estBytes);
   const reduce = ((1 - (newW * newH) / (origW * origH)) * 100);
   reductionEl.textContent = reduce.toFixed(1) + ' %';
 
-  // Canvas に縮小描画
   const ctx = canvasResized.getContext('2d');
-  canvasResized.width  = newW;
-  canvasResized.height = newH;
+  canvasResized.width = newW; canvasResized.height = newH;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = scalePct < 50 ? 'low' : 'high';
   ctx.clearRect(0, 0, newW, newH);
   ctx.drawImage(state.img, 0, 0, newW, newH);
 
-  // ダウンロード用 Blob を非同期に再生成
   const mime = state.meta.type;
   canvasResized.toBlob(
     (blob) => { state.estimatedBlob = blob; },
     mime,
-    mime === 'image/png' ? undefined : 0.92  // JPEG/WebP は quality
+    mime === 'image/png' ? undefined : 0.92
   );
 }
 
-// ============================
-// イベント
-// ============================
-// ファイル選択
 fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
 
-// ドラッグ＆ドロップ
 ['dragenter', 'dragover'].forEach(ev => {
   uploadZone.addEventListener(ev, (e) => {
     e.preventDefault(); e.stopPropagation();
@@ -194,7 +143,6 @@ uploadZone.addEventListener('drop', (e) => {
   if (file) handleFile(file);
 });
 
-// スライダーは requestAnimationFrame で間引き、100ms 以内の追従
 let rafQueued = false;
 slider.addEventListener('input', () => {
   if (rafQueued) return;
@@ -205,7 +153,6 @@ slider.addEventListener('input', () => {
   });
 });
 
-// ダウンロード
 downloadBtn.addEventListener('click', () => {
   if (!state.estimatedBlob || !state.meta) return;
   const url = URL.createObjectURL(state.estimatedBlob);
